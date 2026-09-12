@@ -1,14 +1,80 @@
-# DSS150P Weeks 2-3 Laboratory Package
+# DSS150P Laboratory Activity #2
 
-Start with the Word laboratory guide. This repository is intentionally incomplete.
+**Student Name:** Sophia Abad
 
-## Quick start
-1. `python -m venv .venv`
-2. Activate `.venv`
-3. `pip install -r requirements.txt`
-4. `docker compose up -d`
-5. Load PostgreSQL seed: `docker exec -i dss150p-w23-postgres psql -U dss150p -d dss150p < sql/seed_support_tickets.sql`
-6. Terminal A: `python src/local_api_server.py`
-7. Terminal B: complete/run profiling and ingestion scripts.
+## About This Laboratory
 
-Do not commit `.env`, generated raw data, or watermark state unless specifically instructed.
+This laboratory activity focuses on profiling different data sources and building a simple but rerunnable ingestion pipeline.
+
+For this activity, I worked with several types of data sources including CSV, JSON, Parquet, a REST API, and PostgreSQL. The main goal was to understand the sources first, document their structure, and then create an ingestion process that can safely run more than once without creating unnecessary duplicates.
+
+The pipeline also uses a watermark for incremental API ingestion, keeps a run log, and includes validation checks to make sure the raw data is still consistent after each run.
+
+## What I Did
+
+For this laboratory, I completed the following:
+
+- Profiled `customers.csv`
+- Profiled `orders.json`
+- Profiled `products.parquet`
+- Inspected the paginated REST API
+- Inspected the PostgreSQL `support_tickets` table
+- Created source metadata documentation
+- Created a basic schema
+- Created a data contract for `customers.csv`
+- Documented the ingestion design
+- Implemented file ingestion using SHA-256 hashes
+- Added duplicate prevention for unchanged files
+- Implemented paginated API ingestion
+- Added `_ingested_at` and `_source` metadata to API records
+- Deduplicated API records using `event_id`
+- Kept the latest record based on `updated_at`
+- Implemented a persistent API watermark
+- Added a pipeline run log
+- Tested an unchanged rerun for idempotency
+- Tested API failure behavior
+- Confirmed that the watermark does not advance after a failed run
+- Tested recovery after the API was restored
+- Added validation checks for the generated raw data
+
+## Repository Structure
+
+```text
+DSS150P_Lab02_Abad_Sophia/
+├── config/
+│   ├── basic_schema.yml
+│   ├── data_contract_customers.yml
+│   ├── source_metadata.yml
+│   └── source_metadata_template.yml
+│
+├── data/
+│
+├── evidence/
+│   ├── 01_postgresql_inspection.png
+│   ├── 02_api_pagination.png
+│   ├── 03_first_ingestion.png
+│   ├── 04_idempotent_rerun.png
+│   ├── 05_api_failure.png
+│   ├── 06_api_recovery.png
+│   └── 07_validation_passed.png
+│
+├── sql/
+│
+├── src/
+│   ├── ingest_pipeline.py
+│   ├── local_api_server.py
+│   ├── profile_sources.py
+│   └── validate_raw.py
+│
+├── templates/
+│   ├── pipeline_run_log_template.csv
+│   └── profiling_report_template.md
+│
+├── .gitignore
+├── docker-compose.yml
+├── engineering_reflection.md
+├── ingestion_design.md
+├── pipeline_run_log.csv
+├── README.md
+└── requirements.txt
+```
