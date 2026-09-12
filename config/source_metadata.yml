@@ -1,0 +1,140 @@
+sources:
+
+  - source_name: customers
+    source_type: CSV
+    location_or_endpoint: data/customers.csv
+    owner: "Unknown - instructor-provided source"
+    description: "Customer master data supplied as a CSV file."
+    record_count: 250
+    schema:
+      - customer_id: string
+      - first_name: string
+      - last_name: string
+      - email: string
+      - city: string
+      - signup_date: date
+      - customer_segment: string
+    primary_or_candidate_key: "customer_id - intended candidate key, but profiling found duplicate values"
+    update_pattern: "Batch file / snapshot; exact cadence not specified"
+    known_quality_issues:
+      - "3 missing email values"
+      - "2 missing city values"
+      - "2 exact duplicate rows"
+      - "customer_id is not unique; 3 duplicated occurrences were detected"
+    acquisition_method: "File-based batch ingestion"
+    validation_checks:
+      - "Check required columns are present"
+      - "Check customer_id is not null"
+      - "Check customer_id uniqueness"
+      - "Check signup_date is parseable as a date"
+      - "Check missing values in email and city"
+
+  - source_name: orders
+    source_type: JSON
+    location_or_endpoint: data/orders.json
+    owner: "Unknown - instructor-provided source"
+    description: "Order records supplied as a JSON array."
+    record_count: 250
+    schema:
+      - order_id: string
+      - customer_id: string
+      - order_timestamp: timestamp
+      - status: string
+      - item_count: integer
+      - subtotal: number
+      - shipping_fee: number
+      - total_amount: number
+      - shipping: nested_object
+    primary_or_candidate_key: order_id
+    update_pattern: "Batch file / snapshot; exact cadence not specified"
+    known_quality_issues:
+      - "No missing top-level values were observed"
+      - "shipping is a nested object and requires an explicit downstream representation"
+    acquisition_method: "File-based batch ingestion"
+    validation_checks:
+      - "Check required top-level fields are present"
+      - "Check order_id is not null"
+      - "Check order_timestamp is parseable"
+      - "Check numeric amount fields contain numeric values"
+      - "Check shipping contains expected nested fields"
+
+  - source_name: products
+    source_type: Parquet
+    location_or_endpoint: data/products.parquet
+    owner: "Unknown - instructor-provided source"
+    description: "Product reference data supplied as a Parquet file."
+    record_count: 200
+    schema:
+      - product_id: string
+      - product_name: string
+      - category: string
+      - brand: string
+      - unit_price: number
+      - stock_quantity: integer
+      - weight_kg: number
+    primary_or_candidate_key: product_id
+    update_pattern: "Batch file / snapshot; exact cadence not specified"
+    known_quality_issues:
+      - "No missing values were observed during profiling"
+    acquisition_method: "File-based batch ingestion"
+    validation_checks:
+      - "Check required columns are present"
+      - "Check product_id is not null"
+      - "Check numeric columns retain valid numeric types"
+      - "Check stock_quantity contains integer values"
+
+  - source_name: api_events
+    source_type: REST API / JSON
+    location_or_endpoint: http://127.0.0.1:8000/api/events
+    owner: "Unknown - instructor-provided local API"
+    description: "Paginated event records exposed through the supplied local REST API."
+    record_count: 122
+    schema:
+      - event_id: string
+      - customer_id: string
+      - event_type: string
+      - amount: number
+      - updated_at: timestamp
+      - metadata: nested_object
+    primary_or_candidate_key: event_id
+    update_pattern: "Incremental using updated_at"
+    known_quality_issues:
+      - "The API is paginated; retrieving only one page produces incomplete data"
+      - "metadata is a nested object"
+    acquisition_method: "Paginated REST API ingestion using page, per_page, and updated_after"
+    validation_checks:
+      - "Check HTTP request succeeds"
+      - "Follow pagination until has_more is false"
+      - "Check event_id is present"
+      - "Check updated_at is parseable"
+      - "Check duplicate event_id values"
+      - "Verify watermark only advances after successful ingestion"
+
+  - source_name: support_tickets
+    source_type: PostgreSQL
+    location_or_endpoint: "PostgreSQL database dss150p, public.support_tickets"
+    owner: "Unknown - instructor-provided database source"
+    description: "Support ticket records stored in the supplied PostgreSQL database."
+    record_count: 250
+    schema:
+      - ticket_id: integer
+      - customer_id: string
+      - category: string
+      - priority: string
+      - assigned_agent: string
+      - opened_at: timestamp
+      - resolved_at: timestamp
+      - status: string
+    primary_or_candidate_key: ticket_id
+    update_pattern: "Unknown - source system update cadence not specified"
+    known_quality_issues:
+      - "assigned_agent is nullable"
+      - "resolved_at is nullable"
+      - "4 tickets currently have no assigned agent"
+    acquisition_method: "Bounded PostgreSQL queries"
+    validation_checks:
+      - "Check ticket_id is present and unique"
+      - "Check required non-nullable fields are populated"
+      - "Allow assigned_agent to be null"
+      - "Allow resolved_at to be null"
+      - "Check timestamp fields are valid"

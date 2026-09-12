@@ -1,0 +1,91 @@
+customers:
+  source: data/customers.csv
+  fields:
+
+    - name: customer_id
+      source_representation: string
+      logical_type: string
+      nullable: false
+      role: intended_customer_identifier
+      expectation: "Should identify a customer, but profiling found duplicate values"
+
+    - name: first_name
+      source_representation: string
+      logical_type: string
+      nullable: false
+      role: customer_attribute
+
+    - name: last_name
+      source_representation: string
+      logical_type: string
+      nullable: false
+      role: customer_attribute
+
+    - name: email
+      source_representation: string
+      logical_type: string
+      nullable: true
+      role: contact_attribute
+      expectation: "Should follow an email format when populated"
+
+    - name: city
+      source_representation: string
+      logical_type: string
+      nullable: true
+      role: location_attribute
+
+    - name: signup_date
+      source_representation: string
+      logical_type: date
+      nullable: false
+      role: signup_date
+      expectation: "Should be parseable as a valid date"
+
+    - name: customer_segment
+      source_representation: string
+      logical_type: string
+      nullable: false
+      role: customer_classification
+
+
+api_events:
+  source: http://127.0.0.1:8000/api/events
+  fields:
+
+    - name: event_id
+      source_representation: JSON string
+      logical_type: string
+      nullable: false
+      role: event_identifier
+      expectation: "Used for duplicate prevention"
+
+    - name: customer_id
+      source_representation: JSON string
+      logical_type: string
+      nullable: false
+      role: customer_reference
+
+    - name: event_type
+      source_representation: JSON string
+      logical_type: string
+      nullable: false
+      role: event_classification
+
+    - name: amount
+      source_representation: JSON number
+      logical_type: number
+      nullable: false
+      role: event_measure
+
+    - name: updated_at
+      source_representation: JSON string
+      logical_type: timestamp
+      nullable: false
+      role: incremental_watermark
+      expectation: "Should be parseable as a timestamp"
+
+    - name: metadata
+      source_representation: JSON object
+      logical_type: nested_object
+      nullable: false
+      role: event_metadata

@@ -1,18 +1,115 @@
 dataset: customers
-owner: "TODO"
+
+description: "Customer master data supplied as a CSV file for raw ingestion."
+
+owner: "Unknown - instructor-provided source; business owner requires confirmation"
+
+consumer: "DSS150P raw ingestion pipeline"
+
 source_type: csv
-primary_key: customer_id
+source_format: CSV
+source_location: data/customers.csv
+
 delivery:
-  cadence: "TODO"
+  cadence: "Unknown - requires source owner confirmation"
+  availability_expectation: "The complete source file should be available before batch ingestion begins."
+
+primary_key: customer_id
+
 fields:
+
   - name: customer_id
     type: string
     nullable: false
     unique: true
+    description: "Intended unique identifier for each customer."
+
+  - name: first_name
+    type: string
+    nullable: false
+    unique: false
+    description: "Customer first name."
+
+  - name: last_name
+    type: string
+    nullable: false
+    unique: false
+    description: "Customer last name."
+
   - name: email
     type: string
     nullable: true
+    unique: false
+    description: "Customer email address."
+
+  - name: city
+    type: string
+    nullable: true
+    unique: false
+    description: "Customer city."
+
+  - name: signup_date
+    type: date
+    nullable: false
+    unique: false
+    description: "Date when the customer signed up."
+
+  - name: customer_segment
+    type: string
+    nullable: false
+    unique: false
+    description: "Customer classification or segment."
+
 quality_rules:
-  - "TODO: define at least 5 rules"
-change_policy:
-  schema_change_notice: "TODO"
+
+  - rule: "customer_id must not be null"
+    severity: error
+
+  - rule: "customer_id must be unique"
+    severity: error
+
+  - rule: "signup_date must be parseable as a valid date"
+    severity: error
+
+  - rule: "email should follow a valid email format when populated"
+    severity: warning
+
+  - rule: "required columns must be present"
+    severity: error
+
+  - rule: "first_name and last_name must not be null"
+    severity: error
+
+  - rule: "customer_segment must not be null"
+    severity: error
+
+known_current_violations:
+
+  - "Profiling found 2 exact duplicate rows."
+  - "Profiling found 3 duplicated customer_id occurrences."
+  - "3 email values are missing."
+  - "2 city values are missing."
+
+duplicate_policy:
+  expected_behavior: "customer_id should uniquely identify one customer"
+  current_source_status: "Violation detected during profiling"
+  ingestion_response: "Preserve the raw source unchanged, log the duplicate condition, and do not silently remove or modify source records."
+
+freshness_expectation:
+  status: "Unknown"
+  note: "No confirmed source delivery cadence was provided."
+
+schema_change_policy:
+  notification_expectation: "Source schema changes should be communicated before ingestion runs that depend on the changed schema."
+  unexpected_change_response: "Log the schema difference and fail validation rather than silently accepting incompatible changes."
+
+contract_violation_response:
+  - "Record the validation failure."
+  - "Preserve the original raw source."
+  - "Do not silently repair or overwrite source values."
+  - "Report the violated rule for investigation."
+
+ingestion:
+  approach: batch
+  mode: full_file
+  justification: "customers.csv is delivered as a complete file snapshot, so the raw ingestion process should preserve and ingest the supplied file as a batch."
